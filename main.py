@@ -1,8 +1,17 @@
 import socket
 import threading
+import json
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-server.bind(('localhost', 80))
+
+hostname=socket.gethostname()   
+IPAddr=socket.gethostbyname(hostname)
+server.bind(('localhost',80))
 server.listen(5)
+f=open('login.json','r')
+data=json.load(f)
+f.close()
+id=data['account'][0]['id']
+psw=data['account'][0]['psw']
 
 class requestparse:
     def __init__(self, request):
@@ -96,7 +105,7 @@ def senddata(client, msg):
         password=logininfo.split("&")[1].split("=")[-1]
         print("username:  ",username)
         print("password:  ",password)
-        if username=="admin" and password=="admin":
+        if username==id and password==psw:
             header='HTTP/1.1 303 See Other\r\nLocation: /images.html\r\n\r\n'
             client.sendall(header.encode())
             f = open('block.txt',"w")
@@ -133,14 +142,20 @@ def handle(connect):
     return 0
 
         
-#mainnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
 
-while True:
-    try:
-        connect, addr = server.accept()
-        print(addr, "connected")
-        threading.Thread(target=handle, args=(connect,)).start()
-    except:
-        print("error")
-        server.close()
-        
+def startserver():
+    print("Server started")
+    
+    while True:
+        try:
+            connect, addr = server.accept()
+            print(addr, "connected")
+            threading.Thread(target=handle, args=(connect,)).start()
+        except:
+            print("error")
+            server.close()
+            break
+    return 0
+
+if __name__ == "__main__":
+    startserver()
